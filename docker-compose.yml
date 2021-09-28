@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+        - "27017:27017"
+    environment: 
+        MONGO_INITDB_DATABASE: mongo
+        MONGO_INITDB_ROOT_USERNAME: root
+        MONGO_INITDB_ROOT_PASSWORD: example
+    volumes: 
+      - transactions_db:/data/db
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:      
+      - transactions_network
+
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+      target: development
+    volumes:
+      - .:/app
+    command: npm run start:dev
+    depends_on:
+      - mongo
+    ports:
+      - 3000:3000
+    environment: 
+      DATABASE_URL: mongodb://root:example@mongo:27017/
+      DATABASE: mongo
+      NODE_ENV: development
+      PORT: 3000
+    
+
+volumes:
+  transactions_db:
+
+networks:
+  transactions_network:
+    driver: bridge
