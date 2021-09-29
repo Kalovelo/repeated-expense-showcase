@@ -8,6 +8,16 @@ import {
 import { TransactionCategoryEnum } from '../interfaces/transaction.interface';
 import RepeatingExpense from '../interfaces/repeatingExpense.interface';
 
+interface ExpenseArchive {
+  descriptionBased: {
+    expenses: Transaction[];
+    descriptions: string[];
+  };
+  merchantBased: {
+    expenses: Transaction[];
+    merchants: string[];
+  };
+}
 @Injectable()
 export class TransactionsService {
   constructor(
@@ -22,27 +32,57 @@ export class TransactionsService {
     return transactions;
   }
 
+  _sortByTime(expenseA: Transaction, expenseB: Transaction) {
+    const dateA = new Date(expenseA.meta.transaction_time);
+    const dateB = new Date(expenseB.meta.transaction_time);
+    return dateA < dateB ? 1 : -1;
+  }
+
   _filterRepeatingExpenses = (expenses: Transaction[]) => {
-    const descriptions = [];
-    const merchants = [];
-    expenses.forEach((transaction) => {
-      descriptions.push(transaction.description);
-      if (transaction.merchant_name) merchants.push(transaction.merchant_name);
+    const expensesArchive: ExpenseArchive = {
+      descriptionBased: {
+        expenses: [],
+        descriptions: [],
+      },
+      merchantBased: {
+        expenses: [],
+        merchants: [],
+      },
+    };
+
+    expenses.forEach((expense) => {
+      if (expense.merchant_name) {
+        expensesArchive.merchantBased.expenses.push(expense);
+        expensesArchive.merchantBased.merchants.push(expense.merchant_name);
+      } else {
+        expensesArchive.descriptionBased.expenses.push(expense);
+        expensesArchive.descriptionBased.descriptions.push(expense.description);
+      }
     });
 
-    const descriptionDuplicates = descriptions.filter(
-      (description, i) => descriptions.indexOf(description) !== i,
-    );
+    const descriptions = new Set(expensesArchive.descriptionBased.descriptions);
+    const merchants = new Set(expensesArchive.merchantBased.merchants);
+    const filteredExpenses: Transaction[] = [];
 
-    const merchantDuplicates = merchants.filter(
-      (merchant, i) => merchants.indexOf(merchant) !== i,
-    );
+    // if an expense has no similar expenses, then it is not repeatitive, therefore skip it
+    descriptions.forEach((description) => {
+      const similarExpenses = expensesArchive.descriptionBased.expenses.filter(
+        (descriptionExpense) => description === descriptionExpense.description,
+      );
+      if (similarExpenses.length < 2) return;
+      similarExpenses.sort(this._sortByTime);
+      filteredExpenses.push(similarExpenses[0]);
+    });
+    merchants.forEach((merchant) => {
+      const similarExpenses = expensesArchive.merchantBased.expenses.filter(
+        (merchantExpense) => merchant === merchantExpense.merchant_name,
+      );
+      if (similarExpenses.length < 2) return;
+      similarExpenses.sort(this._sortByTime);
+      filteredExpenses.push(similarExpenses[0]);
+    });
 
-    return expenses.filter(
-      (expense) =>
-        merchantDuplicates.includes(expense.merchant_name) || // edge case where a transaction has a unique description but is repeated
-        descriptionDuplicates.includes(expense.description),
-    );
+    return filteredExpenses;
   };
 
   _formatPrice = (expense: Transaction) =>
@@ -57,10 +97,10 @@ export class TransactionsService {
       ])
       .exec();
 
-    const repeatedexpenses = this._filterRepeatingExpenses(expenses);
+    const repeatingExpenses = this._filterRepeatingExpenses(expenses);
 
     const formattedRepeatingExpenses: RepeatingExpense[] = [];
-    repeatedexpenses.forEach((expense) => {
+    repeatingExpenses.forEach((expense) => {
       this._formatPrice(expense);
       const newRepeatingExpense: RepeatingExpense = {
         transaction_amount: expense.amount,
