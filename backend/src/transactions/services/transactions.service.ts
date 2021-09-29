@@ -1,14 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
   Transaction,
   TransactionDocument,
 } from '../schemas/transaction.schema';
-import {
-  Transaction as ITransaction,
-  TransactionCategoryEnum,
-} from '../interfaces/transaction.interface';
+import { TransactionCategoryEnum } from '../interfaces/transaction.interface';
+import RepeatingExpense from '../interfaces/repeatingExpense.interface';
 
 @Injectable()
 export class TransactionsService {
@@ -17,14 +15,11 @@ export class TransactionsService {
     private transactionModel: Model<TransactionDocument>,
   ) {}
 
-  private readonly transactions: Transaction[] = [];
-
-  create(transaction: Transaction) {
-    this.transactions.push(transaction);
-  }
-
-  async findAll(): Promise<ITransaction[]> {
-    return await this.transactionModel.find();
+  async findAll(): Promise<Transaction[]> {
+    const transactions = await this.transactionModel.find();
+    if (!transactions)
+      throw new NotFoundException('No transactions were found.');
+    return transactions;
   }
 
   _filterRepeatingExpenses = (expenses: Transaction[]) => {
@@ -53,7 +48,7 @@ export class TransactionsService {
   _formatPrice = (expense: Transaction) =>
     (expense.amount = parseFloat(expense.amount.toFixed(1)));
 
-  async findAllRepeatingExpenses(): Promise<Transaction[]> {
+  async findAllRepeatingExpenses(): Promise<RepeatingExpense[]> {
     const expenses: Transaction[] = await this.transactionModel
       .find()
       .or([
@@ -63,8 +58,22 @@ export class TransactionsService {
       .exec();
 
     const repeatedexpenses = this._filterRepeatingExpenses(expenses);
-    repeatedexpenses.forEach((expense) => this._formatPrice(expense));
 
-    return repeatedexpenses;
+    const formattedRepeatingExpenses: RepeatingExpense[] = [];
+    repeatedexpenses.forEach((expense) => {
+      this._formatPrice(expense);
+      const newRepeatingExpense: RepeatingExpense = {
+        transaction_amount: expense.amount,
+        transaction_date: expense.meta.transaction_time,
+        transaction_description: expense.description,
+      };
+
+      formattedRepeatingExpenses.push(newRepeatingExpense);
+    });
+
+    if (!formattedRepeatingExpenses)
+      throw new NotFoundException('There are no repeating expenses.');
+
+    return formattedRepeatingExpenses;
   }
 }
