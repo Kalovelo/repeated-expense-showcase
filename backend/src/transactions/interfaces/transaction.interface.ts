@@ -1,22 +1,22 @@
 import Meta from './meta.interface';
 
 export enum CurrencyEnum {
-  GBP,
-  EUR,
-  USD,
-  JPY,
+  GBP = 'GBP',
+  EUR = 'EUR',
+  USD = 'USD',
+  JPY = 'JPY',
 }
 
 export enum TransactionTypeEnum {
-  DEBIT,
-  CREDIT,
+  DEBIT = 'DEBIT',
+  CREDIT = 'CREDIT',
 }
 
 export enum TransactionCategoryEnum {
-  PURCHASE,
-  OTHER,
-  DIRECT_DEBIT,
-  TRANSFER,
+  PURCHASE = 'PURCHASE',
+  OTHER = 'OTHER',
+  DIRECT_DEBIT = 'DIRECT_DEBIT',
+  TRANSFER = 'TRANSFER',
 }
 
 export interface Transaction {

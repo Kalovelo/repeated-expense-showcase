@@ -8,6 +8,6 @@ export class TransactionsController {
 
   @Get()
   async findAll(): Promise<Transaction[]> {
-    return await this.transactionService.findAll();
+    return await this.transactionService.findAllRepeatingExpenses();
   }
 }

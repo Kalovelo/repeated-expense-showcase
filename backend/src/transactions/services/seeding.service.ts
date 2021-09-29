@@ -15,7 +15,9 @@ export class SeedingService {
   ) {}
 
   async seed() {
-    if (!(await this.transactionModel.countDocuments()))
+    if (!(await this.transactionModel.countDocuments())) {
+      console.log('[*] Database is empty, triggering seed.');
       this.transactionModel.insertMany(transactions.results);
+    }
   }
 }
