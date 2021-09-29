@@ -1,3 +1,4 @@
+import React from 'react';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -6,7 +7,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import axios from 'axios';
-import React from 'react';
 
 interface Expense {
   transaction_description: string;
@@ -17,6 +17,12 @@ interface Expense {
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
 });
+
+function sortByTimeReducer(expenseA: Expense, expenseB: Expense) {
+  const dateA = new Date(expenseA.transaction_date);
+  const dateB = new Date(expenseB.transaction_date);
+  return dateA < dateB ? 1 : -1;
+}
 
 const App = () => {
   console.log(process.env.REACT_APP_API_URL);
@@ -30,6 +36,8 @@ const App = () => {
         formattedExpense.transaction_date = new Date(expense.transaction_date);
         return formattedExpense;
       });
+
+      expenses.sort(sortByTimeReducer);
       setExpenses(expenses);
     });
   }, []);
@@ -56,7 +64,7 @@ const App = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {expenses.map((expense) => (
+            {expenses.map((expense: Expense) => (
               <TableRow>
                 <TableCell>{expense.transaction_description}</TableCell>
                 <TableCell>{expense.transaction_amount}</TableCell>
@@ -70,4 +78,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default React.memo(App);
