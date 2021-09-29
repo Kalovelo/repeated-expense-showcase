@@ -32,13 +32,25 @@ export class TransactionsService {
     return transactions;
   }
 
-  _sortByTime(expenseA: Transaction, expenseB: Transaction) {
+  /**
+   * Checks if the second expense is latest
+   * @param  {Transaction} expenseA The first expense
+   * @param  {Transaction} expenseB The second expense
+   * @return {Boolean}  returns 1 if expense2 is latest
+   */
+  _sortByTimeReducer(expenseA: Transaction, expenseB: Transaction) {
     const dateA = new Date(expenseA.meta.transaction_time);
     const dateB = new Date(expenseB.meta.transaction_time);
     return dateA < dateB ? 1 : -1;
   }
 
-  _filterRepeatingExpenses = (expenses: Transaction[]) => {
+  /**
+   * Finds the latest repeating expenses.
+   * @param  {Transaction[]} expenses All the (unfiltered) expenses
+   * @return {Transaction[]}  returns the latest repeating expenses
+   */
+  _filterRepeatingExpenses = (expenses: Transaction[]): Transaction[] => {
+    // An object for handling both usual and edge cases
     const expensesArchive: ExpenseArchive = {
       descriptionBased: {
         expenses: [],
@@ -60,6 +72,7 @@ export class TransactionsService {
       }
     });
 
+    // Get unique values
     const descriptions = new Set(expensesArchive.descriptionBased.descriptions);
     const merchants = new Set(expensesArchive.merchantBased.merchants);
     const filteredExpenses: Transaction[] = [];
@@ -70,7 +83,7 @@ export class TransactionsService {
         (descriptionExpense) => description === descriptionExpense.description,
       );
       if (similarExpenses.length < 2) return;
-      similarExpenses.sort(this._sortByTime);
+      similarExpenses.sort(this._sortByTimeReducer);
       filteredExpenses.push(similarExpenses[0]);
     });
     merchants.forEach((merchant) => {
@@ -78,13 +91,17 @@ export class TransactionsService {
         (merchantExpense) => merchant === merchantExpense.merchant_name,
       );
       if (similarExpenses.length < 2) return;
-      similarExpenses.sort(this._sortByTime);
+      similarExpenses.sort(this._sortByTimeReducer);
       filteredExpenses.push(similarExpenses[0]);
     });
 
     return filteredExpenses;
   };
 
+  /**
+   * Formats price.
+   * @param  {Transaction} expense (pass by reference)
+   */
   _formatPrice = (expense: Transaction) =>
     (expense.amount = parseFloat(expense.amount.toFixed(1)));
 
