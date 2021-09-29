@@ -14,7 +14,6 @@ services:
     networks:      
       - transactions_network
 
-
   api:
     build:
       context: ./backend
@@ -33,6 +32,27 @@ services:
       PORT: 3000
     networks:      
       - transactions_network
+    
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+      target: development
+    volumes:
+      - .:/app
+    command: yarn start
+    depends_on:
+      - api
+    ports:
+      - 8000:8000
+    environment: 
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:3000
+      PORT: 8000
+    networks:      
+      - transactions_network
+
+
     
 
 volumes:
