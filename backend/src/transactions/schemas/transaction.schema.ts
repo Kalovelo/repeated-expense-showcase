@@ -1,6 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { IMeta } from '../interfaces/meta.interface';
+import IMeta from '../interfaces/meta.interface';
+import {
+  CurrencyEnum,
+  TransactionCategoryEnum,
+  TransactionTypeEnum,
+} from '../interfaces/transaction.interface';
 import { Meta } from './meta.schema';
 
 export type TransactionDocument = Transaction & Document;
@@ -16,17 +21,21 @@ export class Transaction {
   @Prop({ required: true })
   amount: number;
 
-  @Prop({ enum: ['GBP', 'EUR', 'USD', 'JPY'], required: true })
-  currency: string;
+  @Prop({ required: false })
+  merchant_name?: string;
 
-  @Prop({ enum: ['DEBIT', 'CREDIT'], required: true })
-  transaction_type: string;
+  @Prop({ type: String, enum: ['GBP', 'EUR', 'USD', 'JPY'], required: true })
+  currency: CurrencyEnum;
+
+  @Prop({ type: String, enum: ['DEBIT', 'CREDIT'], required: true })
+  transaction_type: TransactionTypeEnum;
 
   @Prop({
+    type: String,
     enum: ['PURCHASE', 'OTHER', 'DIRECT_DEBIT', 'TRANSFER'],
     required: true,
   })
-  transaction_category: string;
+  transaction_category: TransactionCategoryEnum;
 
   @Prop({ required: true, default: [] })
   transaction_classification: string[];
