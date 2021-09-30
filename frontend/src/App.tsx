@@ -25,8 +25,6 @@ function sortByTimeReducer(expenseA: Expense, expenseB: Expense) {
 }
 
 const App = () => {
-  console.log(process.env.REACT_APP_API_URL);
-
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
 
   React.useEffect(() => {
