@@ -9,7 +9,7 @@ Based on the following stack
 ## How to run using Docker
 ```
 git clone git@github.com:Kalovelo/transaction-showcase.git
-cd transaction-showcase/backend && npm install
+cd repeated-expense-showcase/backend && npm install
 cd ../frontend && yarn install
 cd .. && docker-compose up
 ```
