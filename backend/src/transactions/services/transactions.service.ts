@@ -39,8 +39,8 @@ export class TransactionsService {
    * @return {Boolean}  returns 1 if expense2 is latest
    */
   _sortByTimeReducer(expenseA: Transaction, expenseB: Transaction) {
-    const dateA = new Date(expenseA.meta.transaction_time);
-    const dateB = new Date(expenseB.meta.transaction_time);
+    const dateA = new Date(expenseA.timestamp);
+    const dateB = new Date(expenseB.timestamp);
     return dateA < dateB ? 1 : -1;
   }
 
@@ -121,7 +121,7 @@ export class TransactionsService {
       this._formatPrice(expense);
       const newRepeatingExpense: RepeatingExpense = {
         transaction_amount: expense.amount,
-        transaction_date: expense.meta.transaction_time,
+        transaction_date: expense.timestamp,
         transaction_description: expense.description,
       };
 
